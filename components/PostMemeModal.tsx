@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { X, Upload, Zap, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -23,10 +23,45 @@ export function PostMemeModal({ onClose }: Props) {
   const [isNFT, setIsNFT] = useState(false);
   const [nftPrice, setNftPrice] = useState("0.5");
   const [tokenSymbol, setTokenSymbol] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "creating">("form");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasCreatorToken = !!myBagsProjectId;
+
+  useEffect(() => {
+    if (!selectedImage) {
+      setImagePreviewUrl("");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(selectedImage);
+    setImagePreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedImage]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    if (!file) return;
+
+    const validTypes = ["image/png", "image/jpeg", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      addToast("Please upload a PNG, JPG, or GIF image.", "error");
+      event.target.value = "";
+      return;
+    }
+
+    const maxSizeBytes = 10 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      addToast("Image is too large. Maximum size is 10MB.", "error");
+      event.target.value = "";
+      return;
+    }
+
+    setSelectedImage(file);
+  };
 
   const handleSubmit = async () => {
     if (!publicKey || !title.trim()) return;
@@ -101,18 +136,44 @@ export function PostMemeModal({ onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Image upload placeholder */}
-          <div className="border-2 border-dashed border-border hover:border-accent/50 rounded-xl p-8 text-center cursor-pointer transition-colors group">
-            <Upload
-              size={28}
-              className="mx-auto text-gray-500 group-hover:text-accent-light mb-2 transition-colors"
-            />
-            <p className="text-sm text-gray-400">
-              Drop your meme here or{" "}
-              <span className="text-accent-light">browse</span>
-            </p>
-            <p className="text-xs text-gray-600 mt-1">PNG, JPG, GIF up to 10MB</p>
-          </div>
+          {/* Image upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/gif"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full border-2 border-dashed border-border hover:border-accent/50 rounded-xl p-5 text-center cursor-pointer transition-colors group"
+          >
+            {imagePreviewUrl ? (
+              <div className="space-y-3">
+                <img
+                  src={imagePreviewUrl}
+                  alt="Selected meme preview"
+                  className="mx-auto max-h-56 w-auto rounded-lg object-contain"
+                />
+                <p className="text-xs text-gray-400">
+                  {selectedImage?.name} - click to choose another image
+                </p>
+              </div>
+            ) : (
+              <>
+                <Upload
+                  size={28}
+                  className="mx-auto text-gray-500 group-hover:text-accent-light mb-2 transition-colors"
+                />
+                <p className="text-sm text-gray-400">
+                  Drop your meme here or{" "}
+                  <span className="text-accent-light">browse</span>
+                </p>
+                <p className="text-xs text-gray-600 mt-1">PNG, JPG, GIF up to 10MB</p>
+              </>
+            )}
+          </button>
 
           {/* Title */}
           <div>
@@ -227,7 +288,7 @@ export function PostMemeModal({ onClose }: Props) {
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={!title.trim() || loading}
+              disabled={!title.trim() || !selectedImage || loading}
               className="w-full py-3.5 rounded-xl font-bold text-white bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Post Meme{!hasCreatorToken && tokenSymbol ? " & Launch Token" : ""}
