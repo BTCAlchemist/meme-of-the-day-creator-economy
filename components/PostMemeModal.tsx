@@ -4,10 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { X, Upload, Zap, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import {
-  createBagsProject,
-  createBagsToken,
-} from "@/lib/bags";
+import { supabase } from "@/lib/supabase";
+import { createBagsProject, createBagsToken } from "@/lib/bags";
 
 interface Props {
   onClose: () => void;
@@ -18,25 +16,20 @@ export function PostMemeModal({ onClose }: Props) {
   const { addToast, emitBagsEvent, myBagsProjectId, myTokenSymbol, setMyBagsProject } =
     useAppStore();
 
-  const [title, setTitle] = useState("");
-  const [tags, setTags] = useState("");
+  const [caption, setCaption] = useState("");
   const [isNFT, setIsNFT] = useState(false);
   const [nftPrice, setNftPrice] = useState("0.5");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"form" | "creating">("form");
+  const [step, setStep] = useState<"form" | "uploading" | "creating">("form");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasCreatorToken = !!myBagsProjectId;
 
   useEffect(() => {
-    if (!selectedImage) {
-      setImagePreviewUrl("");
-      return;
-    }
-
+    if (!selectedImage) { setImagePreviewUrl(""); return; }
     const objectUrl = URL.createObjectURL(selectedImage);
     setImagePreviewUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
@@ -45,78 +38,95 @@ export function PostMemeModal({ onClose }: Props) {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     if (!file) return;
-
     const validTypes = ["image/png", "image/jpeg", "image/gif"];
     if (!validTypes.includes(file.type)) {
       addToast("Please upload a PNG, JPG, or GIF image.", "error");
       event.target.value = "";
       return;
     }
-
-    const maxSizeBytes = 10 * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
+    if (file.size > 10 * 1024 * 1024) {
       addToast("Image is too large. Maximum size is 10MB.", "error");
       event.target.value = "";
       return;
     }
-
     setSelectedImage(file);
   };
 
+  const uploadImage = async (file: File, wallet: string): Promise<string> => {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${wallet}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("meme-images")
+      .upload(path, file, { upsert: false });
+    if (error) throw new Error(`Upload failed: ${error.message}`);
+    const { data } = supabase.storage.from("meme-images").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const handleSubmit = async () => {
-    if (!publicKey || !title.trim()) return;
+    if (!publicKey || !caption.trim() || !selectedImage) return;
     setLoading(true);
-    setStep("creating");
 
     try {
+      const wallet = publicKey.toBase58();
+
+      // 1. Upload image to Supabase Storage
+      setStep("uploading");
+      const imageUrl = await uploadImage(selectedImage, wallet);
+
+      // 2. Bags project/token for first-time creators
+      setStep("creating");
       let projectId = myBagsProjectId;
       let symbol = myTokenSymbol;
 
-      // First-time creator: create Bags project + token
       if (!hasCreatorToken && tokenSymbol) {
-        // 1. Create project
-        const project = await createBagsProject(
-          publicKey.toBase58(),
-          title.slice(0, 20)
-        );
+        const project = await createBagsProject(wallet, caption.slice(0, 20));
         projectId = project.projectId;
         emitBagsEvent({ type: "project_created", projectId: project.projectId });
-        addToast(
-          `Your creator project was created on Bags (ID: ${project.projectId.slice(0, 12)}...)`,
-          "bags"
-        );
+        addToast(`Creator project created on Bags (${project.projectId.slice(0, 12)}…)`, "bags");
 
-        // 2. Create token
-        const token = await createBagsToken(
-          project.projectId,
-          `${tokenSymbol} Token`,
-          tokenSymbol
-        );
+        const token = await createBagsToken(project.projectId, `${tokenSymbol} Token`, tokenSymbol);
         symbol = token.symbol;
-        emitBagsEvent({
-          type: "token_created",
-          symbol: token.symbol,
-          projectId: project.projectId,
-        });
-        addToast(
-          `Your creator token $${token.symbol} is live on Bags!`,
-          "bags"
-        );
-
+        emitBagsEvent({ type: "token_created", symbol: token.symbol, projectId: project.projectId });
+        addToast(`Creator token $${token.symbol} is live on Bags!`, "bags");
         setMyBagsProject(project.projectId, token.symbol);
       }
 
-      // Simulate posting the meme
-      await new Promise((r) => setTimeout(r, 800));
-      addToast(`Meme posted! "${title.slice(0, 30)}…"`, "success");
+      // 3. Upsert user record
+      await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet_address: wallet, bags_project_id: projectId }),
+      });
+
+      // 4. Save meme to DB
+      const res = await fetch("/api/memes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          creator_wallet: wallet,
+          image_url: imageUrl,
+          caption: caption.trim(),
+          price: isNFT ? parseFloat(nftPrice) : null,
+          is_for_sale: isNFT,
+          is_nft: isNFT,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save meme");
+
+      addToast(`Meme posted! "${caption.slice(0, 30)}…"`, "success");
       onClose();
-    } catch {
-      addToast("Failed to post meme. Please try again.", "error");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to post meme.", "error");
     } finally {
       setLoading(false);
       setStep("form");
     }
   };
+
+  const stepLabel =
+    step === "uploading" ? "Uploading image…" : "Creating on Bags & posting…";
 
   return (
     <div
@@ -124,7 +134,6 @@ export function PostMemeModal({ onClose }: Props) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-surface border border-border rounded-2xl w-full max-w-lg animate-slide-up shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-surface z-10">
           <h2 className="font-bold text-white text-lg">Post a Meme</h2>
           <button
@@ -136,7 +145,6 @@ export function PostMemeModal({ onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Image upload */}
           <input
             ref={fileInputRef}
             type="file"
@@ -157,79 +165,49 @@ export function PostMemeModal({ onClose }: Props) {
                   className="mx-auto max-h-56 w-auto rounded-lg object-contain"
                 />
                 <p className="text-xs text-gray-400">
-                  {selectedImage?.name} - click to choose another image
+                  {selectedImage?.name} — click to choose another
                 </p>
               </div>
             ) : (
               <>
-                <Upload
-                  size={28}
-                  className="mx-auto text-gray-500 group-hover:text-accent-light mb-2 transition-colors"
-                />
+                <Upload size={28} className="mx-auto text-gray-500 group-hover:text-accent-light mb-2 transition-colors" />
                 <p className="text-sm text-gray-400">
-                  Drop your meme here or{" "}
-                  <span className="text-accent-light">browse</span>
+                  Drop your meme here or <span className="text-accent-light">browse</span>
                 </p>
                 <p className="text-xs text-gray-600 mt-1">PNG, JPG, GIF up to 10MB</p>
               </>
             )}
           </button>
 
-          {/* Title */}
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block font-medium">
-              Title *
-            </label>
+            <label className="text-xs text-gray-400 mb-1.5 block font-medium">Caption *</label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
               placeholder="When your transaction confirms before your eyes open…"
               className="w-full bg-bg/60 border border-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-accent placeholder:text-gray-600"
             />
           </div>
 
-          {/* Tags */}
-          <div>
-            <label className="text-xs text-gray-400 mb-1.5 block font-medium">
-              Tags (comma separated)
-            </label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="solana, defi, nft"
-              className="w-full bg-bg/60 border border-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-accent placeholder:text-gray-600"
-            />
-          </div>
-
-          {/* NFT toggle */}
           <div className="flex items-center justify-between bg-bg/60 border border-border/50 rounded-xl px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-white">Mint as NFT</p>
-              <p className="text-xs text-gray-500">
-                Set a price and earn from sales
-              </p>
+              <p className="text-xs text-gray-500">Set a price and earn from sales</p>
             </div>
             <button
               onClick={() => setIsNFT(!isNFT)}
-              className={`w-11 h-6 rounded-full transition-colors relative ${
-                isNFT ? "bg-accent" : "bg-gray-700"
-              }`}
+              className={`w-11 h-6 rounded-full transition-colors relative ${isNFT ? "bg-accent" : "bg-gray-700"}`}
             >
               <span
-                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                  isNFT ? "translate-x-5" : "translate-x-0.5"
-                }`}
+                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isNFT ? "translate-x-5" : "translate-x-0.5"}`}
               />
             </button>
           </div>
 
           {isNFT && (
             <div>
-              <label className="text-xs text-gray-400 mb-1.5 block font-medium">
-                NFT Price (SOL)
-              </label>
+              <label className="text-xs text-gray-400 mb-1.5 block font-medium">NFT Price (SOL)</label>
               <input
                 type="number"
                 min="0.01"
@@ -241,18 +219,14 @@ export function PostMemeModal({ onClose }: Props) {
             </div>
           )}
 
-          {/* Creator token (first-time) */}
           {!hasCreatorToken && (
             <div className="bg-bags/10 border border-bags/30 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Zap size={16} className="text-bags" />
-                <p className="text-sm font-bold text-bags">
-                  Launch Your Creator Token on Bags
-                </p>
+                <p className="text-sm font-bold text-bags">Launch Your Creator Token on Bags</p>
               </div>
               <p className="text-xs text-gray-400 mb-3">
-                First-time creators automatically get a Bags project and a
-                fungible creator token. Fans can invest in you directly.
+                First-time creators automatically get a Bags project and a fungible creator token. Fans can invest in you directly.
               </p>
               <label className="text-xs text-gray-400 mb-1.5 block font-medium">
                 Token Symbol (2-6 chars, e.g. MLRD)
@@ -260,9 +234,7 @@ export function PostMemeModal({ onClose }: Props) {
               <input
                 type="text"
                 value={tokenSymbol}
-                onChange={(e) =>
-                  setTokenSymbol(e.target.value.toUpperCase().slice(0, 6))
-                }
+                onChange={(e) => setTokenSymbol(e.target.value.toUpperCase().slice(0, 6))}
                 placeholder="MYTKN"
                 maxLength={6}
                 className="w-full bg-bg/80 border border-bags/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-bags placeholder:text-gray-600"
@@ -278,17 +250,16 @@ export function PostMemeModal({ onClose }: Props) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-5 pt-0">
-          {step === "creating" ? (
+          {loading ? (
             <div className="w-full py-3.5 rounded-xl bg-bags/20 border border-bags/30 flex items-center justify-center gap-2 text-bags font-semibold">
               <Loader2 size={18} className="animate-spin" />
-              Creating on Bags & posting…
+              {stepLabel}
             </div>
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={!title.trim() || !selectedImage || loading}
+              disabled={!caption.trim() || !selectedImage}
               className="w-full py-3.5 rounded-xl font-bold text-white bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Post Meme{!hasCreatorToken && tokenSymbol ? " & Launch Token" : ""}
