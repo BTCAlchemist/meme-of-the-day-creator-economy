@@ -22,7 +22,7 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
   const [votes, setVotes] = useState(meme.total_votes);
 
   const hasVoted = votedMemes.has(meme.id);
-  const displayVotes = votes + (hasVoted ? 1 : 0);
+  const displayVotes = votes;
 
   const handleVote = async () => {
     if (!publicKey) { setVisible(true); return; }

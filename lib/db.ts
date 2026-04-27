@@ -1,7 +1,9 @@
 import { supabase } from "./supabase";
 import { DbComment, DbMeme, DbUser } from "./types";
+import { unstable_noStore as noStore } from "next/cache";
 
 export async function getMemes(): Promise<DbMeme[]> {
+  noStore();
   const { data, error } = await supabase
     .from("memes")
     .select("*")
@@ -11,6 +13,7 @@ export async function getMemes(): Promise<DbMeme[]> {
 }
 
 export async function getMemesToday(): Promise<DbMeme[]> {
+  noStore();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const { data, error } = await supabase
@@ -23,6 +26,7 @@ export async function getMemesToday(): Promise<DbMeme[]> {
 }
 
 export async function getMemesThisWeek(): Promise<DbMeme[]> {
+  noStore();
   const weekAgo = new Date(Date.now() - 7 * 86400000);
   const { data, error } = await supabase
     .from("memes")
@@ -34,6 +38,7 @@ export async function getMemesThisWeek(): Promise<DbMeme[]> {
 }
 
 export async function getMemeOfDay(): Promise<DbMeme | null> {
+  noStore();
   const { data } = await supabase
     .from("memes")
     .select("*")
@@ -44,6 +49,7 @@ export async function getMemeOfDay(): Promise<DbMeme | null> {
 }
 
 export async function getMemeById(id: string): Promise<DbMeme | null> {
+  noStore();
   const { data } = await supabase
     .from("memes")
     .select("*")
@@ -53,6 +59,7 @@ export async function getMemeById(id: string): Promise<DbMeme | null> {
 }
 
 export async function getMemesByCreator(wallet: string): Promise<DbMeme[]> {
+  noStore();
   const { data, error } = await supabase
     .from("memes")
     .select("*")
@@ -75,6 +82,7 @@ export async function createMeme(
 }
 
 export async function getComments(memeId: string): Promise<DbComment[]> {
+  noStore();
   const { data, error } = await supabase
     .from("comments")
     .select("*")
@@ -109,6 +117,7 @@ export async function upsertUser(
 }
 
 export async function getUserByWallet(wallet: string): Promise<DbUser | null> {
+  noStore();
   const { data } = await supabase
     .from("users")
     .select("*")
