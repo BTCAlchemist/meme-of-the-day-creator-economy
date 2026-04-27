@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { BagsEvent, Meme, Comment } from "./types";
+import { BagsEvent } from "./types";
 
 interface Toast {
   id: string;
@@ -22,10 +22,6 @@ interface AppState {
   // Optimistic votes
   votedMemes: Set<string>;
   voteOnMeme: (memeId: string) => void;
-
-  // Optimistic comments
-  comments: Record<string, Comment[]>;
-  addComment: (memeId: string, comment: Comment) => void;
 
   // Creator project state (per session)
   myBagsProjectId: string | null;
@@ -55,15 +51,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       next.add(memeId);
       return { votedMemes: next };
     }),
-
-  comments: {},
-  addComment: (memeId, comment) =>
-    set((s) => ({
-      comments: {
-        ...s.comments,
-        [memeId]: [...(s.comments[memeId] ?? []), comment],
-      },
-    })),
 
   myBagsProjectId: null,
   myTokenSymbol: null,
