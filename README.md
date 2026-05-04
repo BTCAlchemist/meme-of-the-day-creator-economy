@@ -50,3 +50,6 @@ npm run start
 This app is developed using a dual-AI pipeline:
 - Claude Code for architecture generation
 - Cursor AI for iterative refinement
+
+
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
