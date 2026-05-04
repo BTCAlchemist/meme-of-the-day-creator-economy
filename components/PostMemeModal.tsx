@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { X, Upload, Zap, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { createBagsProject, createBagsToken } from "@/lib/bags";
 
 interface Props {
@@ -53,6 +53,7 @@ export function PostMemeModal({ onClose }: Props) {
   };
 
   const uploadImage = async (file: File, wallet: string): Promise<string> => {
+    const supabase = getSupabase();
     const ext = file.name.split(".").pop() ?? "jpg";
     const path = `${wallet}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage

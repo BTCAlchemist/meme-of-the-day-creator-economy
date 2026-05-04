@@ -5,6 +5,8 @@ import { getUserByWallet, getMemesByCreator } from "@/lib/db";
 import { MemeCard } from "@/components/MemeCard";
 import { ImageIcon, Zap, BarChart3 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: { id: string };
 }

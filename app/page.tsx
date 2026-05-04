@@ -6,6 +6,8 @@ import { Flame, Zap, Trophy } from "lucide-react";
 import Link from "next/link";
 import { PoweredByBagsBadge } from "@/components/BagsToast";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [memeOfDay, allMemes] = await Promise.all([getMemeOfDay(), getMemes()]);
   const recentMemes = allMemes.filter((m) => m.id !== memeOfDay?.id).slice(0, 4);
