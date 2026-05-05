@@ -8,6 +8,8 @@ import { MemeActionBar } from "@/components/MemeActionBar";
 import { ArrowLeft, ExternalLink, Flame } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: { id: string };
 }

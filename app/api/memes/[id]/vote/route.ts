@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  const supabase = getSupabase();
   const { id } = params;
   const { data, error: fetchError } = await supabase
     .from("memes")

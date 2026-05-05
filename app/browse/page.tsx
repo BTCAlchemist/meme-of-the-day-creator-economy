@@ -2,6 +2,8 @@ import { getMemes } from "@/lib/db";
 import { BrowseClient } from "@/components/BrowseClient";
 import { LayoutGrid } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function BrowsePage() {
   const memes = await getMemes();
 

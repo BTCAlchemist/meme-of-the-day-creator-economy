@@ -27,7 +27,7 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const [votes, setVotes] = useState(meme.total_votes);
 
   const hasVoted = votedMemes.has(meme.id);
-  const displayVotes = votes;
+  const displayVotes = votes + (hasVoted ? 1 : 0);
 
   const handleVote = async () => {
     if (!publicKey) { setVisible(true); return; }
