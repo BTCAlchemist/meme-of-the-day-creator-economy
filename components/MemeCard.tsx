@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUp, MessageCircle, ShoppingCart, Zap, Flame } from "lucide-react";
@@ -24,18 +24,29 @@ function shortWallet(wallet: string) {
 export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const { publicKey } = useWallet();
   const { setVisible } = useWalletModal();
-  const { votedMemes, voteOnMeme, addToast } = useAppStore();
+  const { votedMemes, hydrateVotedMemes, voteOnMeme, addToast } = useAppStore();
   const [votes, setVotes] = useState(meme.total_votes);
 
+  const wallet = publicKey?.toBase58() ?? null;
+
+  useEffect(() => {
+    hydrateVotedMemes(wallet);
+  }, [hydrateVotedMemes, wallet]);
+
   const hasVoted = votedMemes.has(meme.id);
-  const displayVotes = votes + (hasVoted ? 1 : 0);
+  const displayVotes = votes;
 
   const handleVote = async () => {
     if (!publicKey) { setVisible(true); return; }
     if (hasVoted) return;
-    voteOnMeme(meme.id);
+    voteOnMeme(wallet, meme.id);
     setVotes((v) => v + 1);
-    await fetch(`/api/memes/${meme.id}/vote`, { method: "POST" });
+    const res = await fetch(`/api/memes/${meme.id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet_address: wallet }),
+    });
+    if (!res.ok) throw new Error("Vote failed");
     addToast(`Voted for "${meme.caption.slice(0, 30)}…"`, "success");
   };
 

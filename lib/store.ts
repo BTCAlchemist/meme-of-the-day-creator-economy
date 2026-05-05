@@ -21,7 +21,8 @@ interface AppState {
 
   // Optimistic votes
   votedMemes: Set<string>;
-  voteOnMeme: (memeId: string) => void;
+  hydrateVotedMemes: (wallet: string | null) => void;
+  voteOnMeme: (wallet: string | null, memeId: string) => void;
 
   // Creator project state (per session)
   myBagsProjectId: string | null;
@@ -45,10 +46,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   votedMemes: new Set(),
-  voteOnMeme: (memeId) =>
+  hydrateVotedMemes: (wallet) => {
+    if (!wallet) {
+      set({ votedMemes: new Set() });
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(`votedMemes:${wallet}`);
+      const arr = raw ? (JSON.parse(raw) as unknown) : [];
+      const ids = Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
+      set({ votedMemes: new Set(ids) });
+    } catch {
+      set({ votedMemes: new Set() });
+    }
+  },
+  voteOnMeme: (wallet, memeId) =>
     set((s) => {
       const next = new Set(s.votedMemes);
       next.add(memeId);
+      if (wallet) {
+        try {
+          localStorage.setItem(`votedMemes:${wallet}`, JSON.stringify(Array.from(next)));
+        } catch {
+          // ignore storage errors (private mode / quota)
+        }
+      }
       return { votedMemes: next };
     }),
 

@@ -19,7 +19,7 @@ function buildStubCreator(wallet: string, bagsProjectId?: string | null): Creato
     id: wallet,
     walletAddress: wallet,
     username: `${wallet.slice(0, 4)}...${wallet.slice(-4)}`,
-    avatarUrl: `https://api.dicebear.com/8.x/bottts/svg?seed=${wallet}`,
+    avatarUrl: `https://api.dicebear.com/8.x/identicon/png?seed=${encodeURIComponent(wallet)}&size=80&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`,
     bio: "",
     bagsProjectId: bagsProjectId ?? "",
     memeCount: 0,
@@ -81,7 +81,8 @@ export default async function MemePage({ params }: Props) {
             alt={creator.username}
             width={44}
             height={44}
-            className="rounded-full bg-gray-800 border-2 border-border group-hover:border-accent/50 transition-colors"
+            className="rounded-full bg-gray-800 border-2 border-border group-hover:border-accent/50 transition-colors object-cover"
+            unoptimized
           />
           <div>
             <p className="font-bold text-white font-mono group-hover:text-accent-light transition-colors">

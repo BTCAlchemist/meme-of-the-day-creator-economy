@@ -23,6 +23,7 @@ Then fill in your values in `.env.local`:
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL (e.g. `https://xxxx.supabase.co`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key
 
 You can find both in your Supabase dashboard under **Project Settings → API**.
 

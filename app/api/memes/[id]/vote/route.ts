@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } }
 ) {
-  const supabase = getSupabase();
   const { id } = params;
-  const { data, error: fetchError } = await supabase
-    .from("memes")
-    .select("total_votes")
-    .eq("id", id)
-    .single();
+  const body = await req.json().catch(() => ({} as unknown));
+  const walletAddress =
+    typeof (body as { wallet_address?: unknown }).wallet_address === "string"
+      ? (body as { wallet_address: string }).wallet_address
+      : null;
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 404 });
+  if (!walletAddress) {
+    return NextResponse.json({ error: "Missing wallet_address" }, { status: 400 });
+  }
 
-  const { error } = await supabase
-    .from("memes")
-    .update({ total_votes: (data.total_votes ?? 0) + 1 })
-    .eq("id", id);
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase.rpc("vote_on_meme", {
+    p_meme_id: id,
+    p_wallet_address: walletAddress,
+  });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, total_votes: (data.total_votes ?? 0) + 1 });
+  return NextResponse.json({ success: true, total_votes: data ?? 0 });
 }
