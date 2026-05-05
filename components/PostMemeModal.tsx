@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { X, Upload, Zap, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function PostMemeModal({ onClose }: Props) {
+  const router = useRouter();
   const { publicKey } = useWallet();
   const { addToast, emitBagsEvent, myBagsProjectId, myTokenSymbol, setMyBagsProject } =
     useAppStore();
@@ -117,6 +119,7 @@ export function PostMemeModal({ onClose }: Props) {
       if (!res.ok) throw new Error("Failed to save meme");
 
       addToast(`Meme posted! "${caption.slice(0, 30)}…"`, "success");
+      router.refresh();
       onClose();
     } catch (err) {
       addToast(err instanceof Error ? err.message : "Failed to post meme.", "error");

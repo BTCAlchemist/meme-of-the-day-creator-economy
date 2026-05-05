@@ -9,6 +9,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useAppStore } from "@/lib/store";
 import { formatDistanceToNow } from "date-fns";
+import { CreatorAvatar } from "./CreatorAvatar";
 
 interface Props {
   meme: DbMeme;
@@ -38,7 +39,6 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
     addToast(`Voted for "${meme.caption.slice(0, 30)}…"`, "success");
   };
 
-  const avatarUrl = `https://api.dicebear.com/8.x/bottts/svg?seed=${meme.creator_wallet}`;
   const username = shortWallet(meme.creator_wallet);
 
   return (
@@ -79,12 +79,12 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
 
         <div className="flex items-center justify-between mb-3">
           <Link href={`/creator/${meme.creator_wallet}`} className="flex items-center gap-2 group/creator">
-            <Image
-              src={avatarUrl}
+            <CreatorAvatar
+              seed={meme.creator_wallet}
               alt={username}
-              width={24}
-              height={24}
-              className="rounded-full bg-gray-800"
+              size={24}
+              shape="square"
+              className="rounded-md"
             />
             <p className="text-xs font-semibold text-white group-hover/creator:text-accent-light transition-colors font-mono">
               {username}

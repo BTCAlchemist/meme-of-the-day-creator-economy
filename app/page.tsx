@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [memeOfDay, allMemes] = await Promise.all([getMemeOfDay(), getMemes()]);
-  const recentMemes = allMemes.filter((m) => m.id !== memeOfDay?.id).slice(0, 4);
+  const recentMemes = allMemes.filter((m) => m.id !== memeOfDay?.id).slice(0, 6);
   const topCreators = getTopCreators().slice(0, 3);
 
   return (
