@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [memeOfDay, allMemes] = await Promise.all([getMemeOfDay(), getMemes()]);
-  const recentMemes = allMemes.filter((m) => m.id !== memeOfDay?.id).slice(0, 4);
+  const recentMemes = allMemes.filter((m) => m.id !== memeOfDay?.id).slice(0, 6);
   const topCreators = getTopCreators().slice(0, 3);
 
   return (
@@ -47,40 +47,23 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {memeOfDay && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
-              <Flame size={20} className="text-bags" />
-              Meme of the Day
-            </h2>
-            <PoweredByBagsBadge />
-          </div>
-          <div className="max-w-xl">
-            <MemeCard meme={memeOfDay} featured />
-          </div>
-        </section>
-      )}
-
-      <div className="grid lg:grid-cols-3 gap-8">
+      <section className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-black text-white">Recent Memes</h2>
-            <Link href="/browse" className="text-sm text-accent-light hover:underline">
-              View all →
-            </Link>
-          </div>
-          {recentMemes.length === 0 ? (
-            <p className="text-gray-500 text-sm">No memes yet — be the first to post!</p>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-4">
-              {recentMemes.map((m) => (
-                <MemeCard key={m.id} meme={m} />
-              ))}
-            </div>
+          {memeOfDay && (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-black text-white flex items-center gap-2">
+                  <Flame size={20} className="text-bags" />
+                  Meme of the Day
+                </h2>
+                <PoweredByBagsBadge />
+              </div>
+              <div className="max-w-xl">
+                <MemeCard meme={memeOfDay} featured />
+              </div>
+            </>
           )}
         </div>
-
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-black text-white flex items-center gap-2">
@@ -97,7 +80,25 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-black text-white">Recent Memes</h2>
+          <Link href="/browse" className="text-sm text-accent-light hover:underline">
+            View all →
+          </Link>
+        </div>
+        {recentMemes.length === 0 ? (
+          <p className="text-gray-500 text-sm">No memes yet — be the first to post!</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentMemes.map((m) => (
+              <MemeCard key={m.id} meme={m} />
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="bg-gradient-to-r from-bags/10 to-accent/10 border border-bags/20 rounded-2xl p-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-3">

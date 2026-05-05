@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUp, MessageCircle, ShoppingCart, Zap, Flame } from "lucide-react";
@@ -9,6 +9,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useAppStore } from "@/lib/store";
 import { formatDistanceToNow } from "date-fns";
+import { CreatorAvatar } from "./CreatorAvatar";
 
 interface Props {
   meme: DbMeme;
@@ -23,22 +24,32 @@ function shortWallet(wallet: string) {
 export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const { publicKey } = useWallet();
   const { setVisible } = useWalletModal();
-  const { votedMemes, voteOnMeme, addToast } = useAppStore();
+  const { votedMemes, hydrateVotedMemes, voteOnMeme, addToast } = useAppStore();
   const [votes, setVotes] = useState(meme.total_votes);
 
+  const wallet = publicKey?.toBase58() ?? null;
+
+  useEffect(() => {
+    hydrateVotedMemes(wallet);
+  }, [hydrateVotedMemes, wallet]);
+
   const hasVoted = votedMemes.has(meme.id);
-  const displayVotes = votes + (hasVoted ? 1 : 0);
+  const displayVotes = votes;
 
   const handleVote = async () => {
     if (!publicKey) { setVisible(true); return; }
     if (hasVoted) return;
-    voteOnMeme(meme.id);
+    voteOnMeme(wallet, meme.id);
     setVotes((v) => v + 1);
-    await fetch(`/api/memes/${meme.id}/vote`, { method: "POST" });
+    const res = await fetch(`/api/memes/${meme.id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet_address: wallet }),
+    });
+    if (!res.ok) throw new Error("Vote failed");
     addToast(`Voted for "${meme.caption.slice(0, 30)}…"`, "success");
   };
 
-  const avatarUrl = `https://api.dicebear.com/8.x/bottts/svg?seed=${meme.creator_wallet}`;
   const username = shortWallet(meme.creator_wallet);
 
   return (
@@ -79,12 +90,12 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
 
         <div className="flex items-center justify-between mb-3">
           <Link href={`/creator/${meme.creator_wallet}`} className="flex items-center gap-2 group/creator">
-            <Image
-              src={avatarUrl}
+            <CreatorAvatar
+              seed={meme.creator_wallet}
               alt={username}
-              width={24}
-              height={24}
-              className="rounded-full bg-gray-800"
+              size={24}
+              shape="square"
+              className="rounded-md"
             />
             <p className="text-xs font-semibold text-white group-hover/creator:text-accent-light transition-colors font-mono">
               {username}
