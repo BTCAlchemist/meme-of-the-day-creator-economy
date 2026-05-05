@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Zap, Users, AlertTriangle } from "lucide-react";
 import { Creator } from "@/lib/types";
 import { InvestModal } from "./InvestModal";
+import { CreatorAvatar } from "./CreatorAvatar";
 
 interface Props {
   creator: Creator;
@@ -31,13 +31,7 @@ export function TrendingTokenCard({ creator, rank }: Props) {
               {rank}
             </span>
             <Link href={`/creator/${creator.id}`} className="flex items-center gap-2">
-              <Image
-                src={creator.avatarUrl}
-                alt={creator.username}
-                width={40}
-                height={40}
-                className="rounded-full bg-gray-800"
-              />
+              <CreatorAvatar seed={creator.id ?? creator.username} alt={creator.username} size={40} />
               <div>
                 <p className="font-bold text-white text-sm group-hover:text-accent-light transition-colors">
                   {creator.username}

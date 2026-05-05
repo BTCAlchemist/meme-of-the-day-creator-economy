@@ -11,6 +11,24 @@ A Next.js app for creating and sharing daily memes in a creator-economy style ex
 npm install
 ```
 
+3. Set up environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+Then fill in your values in `.env.local`:
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL (e.g. `https://xxxx.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key
+
+You can find both in your Supabase dashboard under **Project Settings → API**.
+
+> Also create a public Storage bucket named `meme-images` in your Supabase project for image uploads.
+
 ## Run the App
 
 Start the development server:
@@ -33,3 +51,6 @@ npm run start
 This app is developed using a dual-AI pipeline:
 - Claude Code for architecture generation
 - Cursor AI for iterative refinement
+
+
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)

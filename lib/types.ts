@@ -54,3 +54,42 @@ export type BagsEvent =
   | { type: "token_sold"; symbol: string; tokenAmount: number; sol: number };
 
 export type Tab = "today" | "week" | "all";
+
+// Supabase DB row types
+export interface DbMeme {
+  id: string;
+  creator_wallet: string;
+  image_url: string;
+  caption: string;
+  price: number | null;
+  is_for_sale: boolean;
+  is_nft: boolean;
+  total_votes: number;
+  created_at: string;
+}
+
+export interface DbUser {
+  id: string;
+  wallet_address: string;
+  bags_project_id: string | null;
+  creator_token_address: string | null;
+  cred_score: number;
+}
+
+export interface DbComment {
+  id: string;
+  meme_id: string;
+  user_wallet: string;
+  text: string;
+  likes: number;
+  created_at: string;
+}
+
+export interface DbMemeSale {
+  id: string;
+  meme_id: string;
+  buyer_wallet: string;
+  seller_wallet: string;
+  price: number;
+  royalty_paid: number;
+}

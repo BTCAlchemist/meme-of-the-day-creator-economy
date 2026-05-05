@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { BagsEvent, Meme, Comment } from "./types";
+import { BagsEvent } from "./types";
 
 interface Toast {
   id: string;
@@ -21,11 +21,8 @@ interface AppState {
 
   // Optimistic votes
   votedMemes: Set<string>;
-  voteOnMeme: (memeId: string) => void;
-
-  // Optimistic comments
-  comments: Record<string, Comment[]>;
-  addComment: (memeId: string, comment: Comment) => void;
+  hydrateVotedMemes: (wallet: string | null) => void;
+  voteOnMeme: (wallet: string | null, memeId: string) => void;
 
   // Creator project state (per session)
   myBagsProjectId: string | null;
@@ -49,21 +46,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   votedMemes: new Set(),
-  voteOnMeme: (memeId) =>
+  hydrateVotedMemes: (wallet) => {
+    if (!wallet) {
+      set({ votedMemes: new Set() });
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(`votedMemes:${wallet}`);
+      const arr = raw ? (JSON.parse(raw) as unknown) : [];
+      const ids = Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
+      set({ votedMemes: new Set(ids) });
+    } catch {
+      set({ votedMemes: new Set() });
+    }
+  },
+  voteOnMeme: (wallet, memeId) =>
     set((s) => {
       const next = new Set(s.votedMemes);
       next.add(memeId);
+      if (wallet) {
+        try {
+          localStorage.setItem(`votedMemes:${wallet}`, JSON.stringify(Array.from(next)));
+        } catch {
+          // ignore storage errors (private mode / quota)
+        }
+      }
       return { votedMemes: next };
     }),
-
-  comments: {},
-  addComment: (memeId, comment) =>
-    set((s) => ({
-      comments: {
-        ...s.comments,
-        [memeId]: [...(s.comments[memeId] ?? []), comment],
-      },
-    })),
 
   myBagsProjectId: null,
   myTokenSymbol: null,
