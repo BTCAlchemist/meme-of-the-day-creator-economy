@@ -18,7 +18,7 @@ export default async function HomePage() {
       <section className="text-center space-y-4 py-4">
         <div className="inline-flex items-center gap-2 bg-bags/10 border border-bags/30 text-bags text-sm font-bold px-4 py-2 rounded-full mb-2">
           <Flame size={16} />
-          Meme of the Day — Powered by Bags
+          MemeDay
         </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight">
           The Creator Economy
@@ -54,7 +54,7 @@ export default async function HomePage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-black text-white flex items-center gap-2">
                   <Flame size={20} className="text-bags" />
-                  Meme of the Day
+                  MemeDay
                 </h2>
                 <PoweredByBagsBadge />
               </div>

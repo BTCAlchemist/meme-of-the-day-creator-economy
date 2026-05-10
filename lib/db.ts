@@ -136,3 +136,32 @@ export async function getUserByWallet(wallet: string): Promise<DbUser | null> {
     .single();
   return data ?? null;
 }
+
+export async function getCreatorsWithMemeCounts(): Promise<
+  Array<DbUser & { memeCount: number; joinedAt: string }>
+> {
+  noStore();
+  const supabase = getSupabase();
+  const [usersRes, memesRes] = await Promise.all([
+    supabase.from("users").select("*"),
+    supabase
+      .from("memes")
+      .select("creator_wallet, created_at")
+      .order("created_at", { ascending: true }),
+  ]);
+
+  const memeCounts = new Map<string, number>();
+  const firstMemeAt = new Map<string, string>();
+  for (const meme of memesRes.data ?? []) {
+    memeCounts.set(meme.creator_wallet, (memeCounts.get(meme.creator_wallet) ?? 0) + 1);
+    if (!firstMemeAt.has(meme.creator_wallet)) {
+      firstMemeAt.set(meme.creator_wallet, meme.created_at);
+    }
+  }
+
+  return (usersRes.data ?? []).map((u) => ({
+    ...u,
+    memeCount: memeCounts.get(u.wallet_address) ?? 0,
+    joinedAt: firstMemeAt.get(u.wallet_address) ?? new Date().toISOString(),
+  }));
+}

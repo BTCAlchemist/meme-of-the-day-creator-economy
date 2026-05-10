@@ -64,6 +64,7 @@ export interface DbMeme {
   price: number | null;
   is_for_sale: boolean;
   is_nft: boolean;
+  mint_address: string | null;
   total_votes: number;
   created_at: string;
 }

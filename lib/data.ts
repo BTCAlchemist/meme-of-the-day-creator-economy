@@ -1,4 +1,4 @@
-import { Creator, Meme } from "./types";
+import { Creator, DbUser, Meme } from "./types";
 
 export const MOCK_CREATORS: Creator[] = [
   {
@@ -284,3 +284,43 @@ export const getTrendingTokens = () =>
 
 export const getSpikingTokens = () =>
   MOCK_CREATORS.filter((c) => c.token.spiking);
+
+function walletHash(wallet: string): number {
+  let h = 0;
+  for (let i = 0; i < wallet.length; i++) {
+    h = (h * 31 + wallet.charCodeAt(i)) & 0xffff;
+  }
+  return h;
+}
+
+export function creatorFromDbUser(
+  user: DbUser & { memeCount: number; joinedAt: string }
+): Creator {
+  const { wallet_address: wallet, memeCount, joinedAt } = user;
+  const h = walletHash(wallet);
+  const price = parseFloat(((h % 80 + 5) / 1000).toFixed(4));
+  const holders = (h % 180) + memeCount * 5 + 5;
+  const totalVolume = parseFloat((memeCount * ((h % 8) + 1)).toFixed(1));
+  const symbol = wallet.slice(0, 4).toUpperCase();
+
+  return {
+    id: wallet,
+    walletAddress: wallet,
+    username: `${wallet.slice(0, 4)}...${wallet.slice(-4)}`,
+    avatarUrl: `https://api.dicebear.com/8.x/identicon/svg?seed=${wallet}`,
+    bio: "Meme creator on Solana",
+    bagsProjectId: user.bags_project_id ?? `mock-${wallet.slice(0, 8)}`,
+    token: {
+      symbol,
+      name: `${symbol} Token`,
+      price,
+      priceChange24h: parseFloat(((h % 50) - 10).toFixed(1)),
+      holders,
+      totalVolume,
+      marketCap: parseFloat((price * holders * 0.1).toFixed(2)),
+      spiking: h % 4 === 0,
+    },
+    memeCount,
+    joinedAt,
+  };
+}

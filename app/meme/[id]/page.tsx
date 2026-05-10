@@ -94,15 +94,15 @@ export default async function MemePage({ params }: Props) {
           </div>
         </Link>
 
-        {meme.is_nft && (
+        {meme.is_nft && meme.mint_address && (
           <a
-            href={`https://explorer.solana.com/address/${meme.creator_wallet}?cluster=devnet`}
+            href={`https://explorer.solana.com/address/${meme.mint_address}?cluster=devnet`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-accent-light border border-border hover:border-accent/50 px-3 py-2 rounded-lg transition-colors"
           >
             <ExternalLink size={12} />
-            View on Solana
+            View NFT on Solana
           </a>
         )}
       </div>

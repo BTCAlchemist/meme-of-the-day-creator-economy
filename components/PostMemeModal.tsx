@@ -7,6 +7,7 @@ import { X, Upload, Zap, Loader2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { getSupabase } from "@/lib/supabase";
 import { createBagsProject, createBagsToken } from "@/lib/bags";
+import { mintMemeNft } from "@/lib/nft";
 
 interface Props {
   onClose: () => void;
@@ -14,7 +15,8 @@ interface Props {
 
 export function PostMemeModal({ onClose }: Props) {
   const router = useRouter();
-  const { publicKey } = useWallet();
+  const wallet = useWallet();
+  const { publicKey } = wallet;
   const { addToast, emitBagsEvent, myBagsProjectId, myTokenSymbol, setMyBagsProject } =
     useAppStore();
 
@@ -25,7 +27,7 @@ export function PostMemeModal({ onClose }: Props) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"form" | "uploading" | "creating">("form");
+  const [step, setStep] = useState<"form" | "uploading" | "minting" | "creating">("form");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasCreatorToken = !!myBagsProjectId;
@@ -71,19 +73,27 @@ export function PostMemeModal({ onClose }: Props) {
     setLoading(true);
 
     try {
-      const wallet = publicKey.toBase58();
+      const walletAddress = publicKey.toBase58();
 
       // 1. Upload image to Supabase Storage
       setStep("uploading");
-      const imageUrl = await uploadImage(selectedImage, wallet);
+      const imageUrl = await uploadImage(selectedImage, walletAddress);
 
-      // 2. Bags project/token for first-time creators
+      // 2. Mint NFT on Solana devnet (Phantom will prompt for signature)
+      let mintAddress: string | null = null;
+      if (isNFT) {
+        setStep("minting");
+        mintAddress = await mintMemeNft(wallet, walletAddress, imageUrl, caption.trim());
+        addToast("NFT minted on Solana!", "success");
+      }
+
+      // 3. Bags project/token for first-time creators
       setStep("creating");
       let projectId = myBagsProjectId;
       let symbol = myTokenSymbol;
 
       if (!hasCreatorToken && tokenSymbol) {
-        const project = await createBagsProject(wallet, caption.slice(0, 20));
+        const project = await createBagsProject(walletAddress, caption.slice(0, 20));
         projectId = project.projectId;
         emitBagsEvent({ type: "project_created", projectId: project.projectId });
         addToast(`Creator project created on Bags (${project.projectId.slice(0, 12)}…)`, "bags");
@@ -99,7 +109,7 @@ export function PostMemeModal({ onClose }: Props) {
       await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet_address: wallet, bags_project_id: projectId }),
+        body: JSON.stringify({ wallet_address: walletAddress, bags_project_id: projectId }),
       });
 
       // 4. Save meme to DB
@@ -107,12 +117,13 @@ export function PostMemeModal({ onClose }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          creator_wallet: wallet,
+          creator_wallet: walletAddress,
           image_url: imageUrl,
           caption: caption.trim(),
           price: isNFT ? parseFloat(nftPrice) : null,
           is_for_sale: isNFT,
           is_nft: isNFT,
+          mint_address: mintAddress,
         }),
       });
 
@@ -130,7 +141,9 @@ export function PostMemeModal({ onClose }: Props) {
   };
 
   const stepLabel =
-    step === "uploading" ? "Uploading image…" : "Creating on Bags & posting…";
+    step === "uploading" ? "Uploading image…" :
+    step === "minting" ? "Minting NFT on Solana… (approve in Phantom)" :
+    "Creating on Bags & posting…";
 
   return (
     <div
