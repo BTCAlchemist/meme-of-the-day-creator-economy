@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUp, MessageCircle, ShoppingCart, Zap } from "lucide-react";
+import { ArrowUp, MessageCircle, ShoppingCart, Zap, Gift } from "lucide-react";
 import { DbMeme, Creator } from "@/lib/types";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useAppStore } from "@/lib/store";
 import { InvestModal } from "./InvestModal";
+import { TipModal } from "./TipModal";
 
 interface Props {
   meme: DbMeme;
@@ -19,6 +20,7 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
   const { setVisible } = useWalletModal();
   const { votedMemes, hydrateVotedMemes, voteOnMeme, addToast } = useAppStore();
   const [investOpen, setInvestOpen] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
   const [votes, setVotes] = useState(meme.total_votes);
 
   const wallet = publicKey?.toBase58() ?? null;
@@ -78,6 +80,14 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
         )}
 
         <button
+          onClick={() => setTipOpen(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-bg/60 text-gray-300 hover:text-accent-light hover:bg-accent/10 border border-border hover:border-accent/50 transition-colors"
+        >
+          <Gift size={16} />
+          Tip Creator
+        </button>
+
+        <button
           onClick={() => setInvestOpen(true)}
           className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-bags hover:bg-bags-light transition-all hover:scale-105 active:scale-95"
         >
@@ -88,6 +98,14 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
 
       {investOpen && (
         <InvestModal creator={creator} onClose={() => setInvestOpen(false)} />
+      )}
+
+      {tipOpen && (
+        <TipModal
+          creatorWallet={meme.creator_wallet}
+          memeCaption={meme.caption}
+          onClose={() => setTipOpen(false)}
+        />
       )}
     </>
   );

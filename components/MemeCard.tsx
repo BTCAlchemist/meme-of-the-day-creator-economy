@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUp, MessageCircle, ShoppingCart, Zap, Flame } from "lucide-react";
+import { ArrowUp, MessageCircle, ShoppingCart, Zap, Flame, Gift } from "lucide-react";
 import { DbMeme } from "@/lib/types";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useAppStore } from "@/lib/store";
 import { formatDistanceToNow } from "date-fns";
 import { CreatorAvatar } from "./CreatorAvatar";
+import { TipModal } from "./TipModal";
 
 interface Props {
   meme: DbMeme;
@@ -26,6 +27,7 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const { setVisible } = useWalletModal();
   const { votedMemes, hydrateVotedMemes, voteOnMeme, addToast } = useAppStore();
   const [votes, setVotes] = useState(meme.total_votes);
+  const [tipOpen, setTipOpen] = useState(false);
 
   const wallet = publicKey?.toBase58() ?? null;
 
@@ -53,6 +55,7 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const username = shortWallet(meme.creator_wallet);
 
   return (
+    <>
     <div
       className={`group bg-surface border border-border rounded-2xl overflow-hidden transition-all hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 ${
         featured ? "ring-2 ring-bags ring-offset-2 ring-offset-bg" : ""
@@ -138,6 +141,14 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
           )}
 
           <button
+            onClick={() => setTipOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-accent-light bg-bg/60 hover:bg-accent/10 border border-border/50 hover:border-accent/50 transition-colors"
+          >
+            <Gift size={14} />
+            Tip
+          </button>
+
+          <button
             onClick={() => addToast("Creator token investing coming soon via Bags!", "bags")}
             className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-bags bg-bags/10 hover:bg-bags/20 border border-bags/30 hover:border-bags/60 transition-all hover:scale-105"
           >
@@ -147,5 +158,14 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
         </div>
       </div>
     </div>
+
+    {tipOpen && (
+      <TipModal
+        creatorWallet={meme.creator_wallet}
+        memeCaption={meme.caption}
+        onClose={() => setTipOpen(false)}
+      />
+    )}
+    </>
   );
 }
