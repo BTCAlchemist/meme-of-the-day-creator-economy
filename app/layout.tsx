@@ -24,8 +24,7 @@ export default function RootLayout({
           <BagsToastContainer />
           <footer className="border-t border-border mt-16 py-8 text-center text-xs text-gray-600">
             <p>
-              MemeDay &bull; Built on{" "}
-              <span className="text-bags font-semibold">Bags</span> &bull;{" "}
+              MemeDay &bull;{" "}
               <span className="text-accent-light">Solana</span>
             </p>
           </footer>

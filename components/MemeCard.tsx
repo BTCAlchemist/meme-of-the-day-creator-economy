@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUp, MessageCircle, ShoppingCart, Zap, Flame, Gift } from "lucide-react";
+import { ArrowUp, MessageCircle, ShoppingCart, Zap, Gift } from "lucide-react";
 import { DbMeme } from "@/lib/types";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -61,20 +61,13 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
         featured ? "ring-2 ring-bags ring-offset-2 ring-offset-bg" : ""
       }`}
     >
-      {featured && (
-        <div className="flex items-center gap-1.5 bg-bags px-4 py-1.5 text-white text-xs font-bold">
-          <Flame size={12} />
-          MEME OF THE DAY
-        </div>
-      )}
-
       <Link href={`/meme/${meme.id}`} className="block relative">
         <div className={`relative w-full overflow-hidden bg-gray-900 ${featured ? "h-72" : "h-48"}`}>
           <Image
             src={meme.image_url}
             alt={meme.caption}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-contain transition-transform duration-500 group-hover:scale-105"
           />
           {meme.is_nft && meme.price && (
             <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm border border-accent/50 text-accent-light text-xs font-bold px-2 py-0.5 rounded-lg">

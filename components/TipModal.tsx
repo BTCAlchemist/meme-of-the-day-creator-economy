@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { X, Gift, Copy, ExternalLink } from "lucide-react";
+import { X, Gift, Copy, ExternalLink, CheckCircle, AlertCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
+import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 interface Props {
   creatorWallet: string;
@@ -12,6 +14,8 @@ interface Props {
 
 const PRESETS = ["0.01", "0.05", "0.1"] as const;
 const EXPLORER_CLUSTER = "devnet";
+
+type TxStatus = "idle" | "sending" | "success" | "error";
 
 function shortWallet(w: string) {
   return `${w.slice(0, 6)}…${w.slice(-4)}`;
@@ -26,6 +30,10 @@ function buildSolanaPayUrl(recipient: string, amount: string, message: string) {
 export function TipModal({ creatorWallet, memeCaption, onClose }: Props) {
   const [amount, setAmount] = useState("0.01");
   const [copied, setCopied] = useState(false);
+  const [txStatus, setTxStatus] = useState<TxStatus>("idle");
+
+  const { publicKey, sendTransaction } = useWallet();
+  const { connection } = useConnection();
 
   const isValid = !isNaN(parseFloat(amount)) && parseFloat(amount) > 0;
 
@@ -43,6 +51,32 @@ export function TipModal({ creatorWallet, memeCaption, onClose }: Props) {
     await navigator.clipboard.writeText(creatorWallet);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSendTip = async () => {
+    if (!publicKey || !sendTransaction) {
+      window.location.href = solanaPayUrl;
+      return;
+    }
+
+    try {
+      setTxStatus("sending");
+      const lamports = Math.round(parseFloat(amount) * LAMPORTS_PER_SOL);
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: new PublicKey(creatorWallet),
+          lamports,
+        })
+      );
+      const sig = await sendTransaction(transaction, connection);
+      await connection.confirmTransaction(sig, "confirmed");
+      setTxStatus("success");
+      setTimeout(() => setTxStatus("idle"), 3000);
+    } catch {
+      setTxStatus("error");
+      setTimeout(() => setTxStatus("idle"), 3000);
+    }
   };
 
   return (
@@ -145,18 +179,40 @@ export function TipModal({ creatorWallet, memeCaption, onClose }: Props) {
           </div>
         </div>
 
-        {/* Mobile deeplink fallback */}
         <div className="px-5 pb-5">
-          <a
-            href={solanaPayUrl}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white bg-accent hover:bg-accent-light transition-all hover:scale-[1.02] active:scale-[0.98] text-sm"
+          <button
+            onClick={handleSendTip}
+            disabled={!isValid || txStatus === "sending"}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all text-sm ${
+              txStatus === "success"
+                ? "bg-green-600 hover:bg-green-600"
+                : txStatus === "error"
+                ? "bg-red-600 hover:bg-red-600"
+                : "bg-accent hover:bg-accent-light hover:scale-[1.02] active:scale-[0.98]"
+            } disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100`}
           >
-            <Gift size={16} />
-            Open in Wallet App
-          </a>
-          <p className="text-center text-[10px] text-gray-600 mt-2">
-            QR code for desktop · deeplink for mobile
-          </p>
+            {txStatus === "sending" ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Sending…
+              </>
+            ) : txStatus === "success" ? (
+              <>
+                <CheckCircle size={16} />
+                Tip Sent!
+              </>
+            ) : txStatus === "error" ? (
+              <>
+                <AlertCircle size={16} />
+                Failed — Try Again
+              </>
+            ) : (
+              <>
+                <Gift size={16} />
+                Send Tip
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

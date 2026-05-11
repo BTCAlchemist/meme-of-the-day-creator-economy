@@ -92,7 +92,7 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
           className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-bags hover:bg-bags-light transition-all hover:scale-105 active:scale-95"
         >
           <Zap size={16} />
-          Invest in {creator.username}
+          Trade meme token
         </button>
       </div>
 

@@ -64,7 +64,7 @@ export default async function MemePage({ params }: Props) {
           src={meme.image_url}
           alt={meme.caption}
           fill
-          className="object-cover"
+          className="object-contain"
           priority
         />
         {meme.is_nft && meme.price && (
