@@ -7,7 +7,7 @@ import { X, Zap, TrendingUp, Users, BarChart3, Loader2 } from "lucide-react";
 import { Creator } from "@/lib/types";
 import { buyCreatorToken, sellCreatorToken } from "@/lib/bags";
 import { useAppStore } from "@/lib/store";
-import Image from "next/image";
+import { CreatorAvatar } from "./CreatorAvatar";
 
 interface Props {
   creator: Creator;
@@ -110,13 +110,7 @@ export function InvestModal({ creator, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div className="flex items-center gap-3">
-            <Image
-              src={creator.avatarUrl}
-              alt={creator.username}
-              width={40}
-              height={40}
-              className="rounded-full bg-gray-800"
-            />
+            <CreatorAvatar seed={creator.id ?? creator.username} alt={creator.username} size={40} />
             <div>
               <p className="font-bold text-white">{creator.username}</p>
               <p className="text-xs text-bags font-mono">

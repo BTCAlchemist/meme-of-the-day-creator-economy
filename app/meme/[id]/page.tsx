@@ -25,7 +25,7 @@ function buildStubCreator(wallet: string, bagsProjectId?: string | null): Creato
     memeCount: 0,
     joinedAt: new Date().toISOString(),
     token: {
-      symbol: "???",
+      symbol: wallet.slice(0, 5).toUpperCase(),
       name: "Creator Token",
       price: 0.01,
       priceChange24h: 0,

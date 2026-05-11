@@ -117,7 +117,7 @@ export function TipModal({ creatorWallet, memeCaption, onClose }: Props) {
                 <button
                   key={v}
                   onClick={() => setAmount(v)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors border ${
+                  className={`shrink-0 min-w-[3rem] px-2 py-1 rounded-lg text-xs font-mono transition-colors border whitespace-nowrap text-center ${
                     amount === v
                       ? "border-accent text-accent-light bg-accent/10"
                       : "border-border text-gray-400 hover:text-white hover:border-accent/50"

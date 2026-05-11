@@ -48,55 +48,62 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-3 bg-surface border border-border rounded-2xl p-4">
-        <button
-          onClick={handleVote}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
-            hasVoted
-              ? "bg-accent text-white"
-              : "bg-bg/60 text-gray-300 hover:text-white hover:bg-white/10 border border-border"
-          }`}
-        >
-          <ArrowUp size={16} />
-          {displayVotes.toLocaleString()} votes
-        </button>
-
-        <a
-          href="#comments"
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-bg/60 text-gray-300 hover:text-white hover:bg-white/10 border border-border transition-colors"
-        >
-          <MessageCircle size={16} />
-          {commentCount} comments
-        </a>
-
-        {meme.is_nft && meme.price && (
+      <div className="flex flex-col gap-3 bg-surface border border-border rounded-2xl p-4">
+        {/* Votes, comments, optional NFT buy */}
+        <div className="flex flex-wrap gap-3">
           <button
-            onClick={() => publicKey ? addToast("NFT purchase coming soon!", "success") : setVisible(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-accent/10 text-accent-light hover:bg-accent/20 border border-accent/30 transition-colors"
+            onClick={handleVote}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+              hasVoted
+                ? "bg-accent text-white"
+                : "bg-bg/60 text-gray-300 hover:text-white hover:bg-white/10 border border-border"
+            }`}
           >
-            <ShoppingCart size={16} />
-            Buy NFT · {meme.price} SOL
+            <ArrowUp size={16} />
+            {displayVotes.toLocaleString()} votes
           </button>
-        )}
 
-        <button
-          onClick={() => setTipOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
-        >
-          <Gift size={16} />
-          Tip Creator
-        </button>
+          <a
+            href="#comments"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-bg/60 text-gray-300 hover:text-white hover:bg-white/10 border border-border transition-colors"
+          >
+            <MessageCircle size={16} />
+            {commentCount} comments
+          </a>
 
-        <button
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-        >
-          <ShoppingBag size={16} />
-          Buy Meme NFT
-        </button>
+          {meme.is_nft && meme.price && (
+            <button
+              onClick={() => publicKey ? addToast("NFT purchase coming soon!", "success") : setVisible(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-accent/10 text-accent-light hover:bg-accent/20 border border-accent/30 transition-colors"
+            >
+              <ShoppingCart size={16} />
+              Buy NFT · {meme.price} SOL
+            </button>
+          )}
+        </div>
 
+        {/* Row 1: Tip Creator + Buy Meme NFT — equal width */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setTipOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
+          >
+            <Gift size={16} />
+            Tip Creator
+          </button>
+
+          <button
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+          >
+            <ShoppingBag size={16} />
+            Buy Meme NFT
+          </button>
+        </div>
+
+        {/* Row 2: Trade meme token — full width */}
         <button
           onClick={() => setInvestOpen(true)}
-          className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-bags hover:bg-bags-light transition-all hover:scale-105 active:scale-95"
+          className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <Zap size={16} />
           Trade meme token
