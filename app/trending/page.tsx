@@ -2,7 +2,6 @@
 
 import { getTrendingTokens, getSpikingTokens } from "@/lib/data";
 import { TrendingTokenCard } from "@/components/TrendingTokenCard";
-import { PoweredByBagsBadge } from "@/components/BagsToast";
 import { TrendingUp, AlertTriangle, Zap } from "lucide-react";
 
 export default function TrendingPage() {
@@ -11,12 +10,9 @@ export default function TrendingPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <TrendingUp size={28} className="text-accent-light" />
-          <h1 className="text-3xl font-black text-white">Trending Creators</h1>
-        </div>
-        <PoweredByBagsBadge />
+      <div className="flex items-center gap-3 mb-2">
+        <TrendingUp size={28} className="text-accent-light" />
+        <h1 className="text-3xl font-black text-white">Trending Creators</h1>
       </div>
       <p className="text-gray-400 text-sm mb-8">
         Creator tokens ranked by 24h price change. Public — no login needed.

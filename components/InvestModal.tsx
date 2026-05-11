@@ -130,9 +130,8 @@ export function InvestModal({ creator, onClose }: Props) {
         <div className="mx-5 mt-4 flex items-center gap-2 bg-bags/10 border border-bags/30 rounded-xl px-4 py-2.5">
           <Zap size={16} className="text-bags flex-shrink-0" />
           <p className="text-xs text-bags font-medium">
-            This transaction will be executed via{" "}
-            <span className="font-bold">Bags</span> — the creator economy layer
-            on Solana
+            Transaction executed on Solana via{" "}
+            <span className="font-bold">Bags</span> protocol
           </p>
         </div>
 

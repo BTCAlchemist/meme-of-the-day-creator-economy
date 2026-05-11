@@ -109,7 +109,7 @@ export function TrendingTokenCard({ creator, rank }: Props) {
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-bags bg-bags/10 hover:bg-bags/20 border border-bags/30 hover:border-bags/60 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <Zap size={14} />
-          Invest via Bags
+          Invest
         </button>
       </div>
 
