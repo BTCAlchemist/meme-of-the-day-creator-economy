@@ -135,7 +135,7 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
 
           <button
             onClick={() => setTipOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-accent-light bg-bg/60 hover:bg-accent/10 border border-border/50 hover:border-accent/50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
           >
             <Gift size={14} />
             Tip

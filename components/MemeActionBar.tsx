@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUp, MessageCircle, ShoppingCart, Zap, Gift } from "lucide-react";
+import { ArrowUp, MessageCircle, ShoppingCart, ShoppingBag, Zap, Gift } from "lucide-react";
 import { DbMeme, Creator } from "@/lib/types";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -81,10 +81,17 @@ export function MemeActionBar({ meme, creator, commentCount = 0 }: Props) {
 
         <button
           onClick={() => setTipOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-bg/60 text-gray-300 hover:text-accent-light hover:bg-accent/10 border border-border hover:border-accent/50 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
         >
           <Gift size={16} />
           Tip Creator
+        </button>
+
+        <button
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+        >
+          <ShoppingBag size={16} />
+          Buy Meme NFT
         </button>
 
         <button
