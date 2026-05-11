@@ -1,56 +1,50 @@
-# Meme of the Day Creator Economy
+# MemeDay
 
-A Next.js app for creating and sharing daily memes in a creator-economy style experience.
+Memes become assets. Creators become founders. Fans become co-owners.
 
-## Installation
+MemeDay is a Solana-based meme platform built as a creator economy flywheel. Creators post memes and receive SOL tips instantly via Solana Pay. Fans earn platform tokens through engagement. Creators launch individual meme tokens via the Bags SDK. Viral memes become NFTs via Metaplex.
 
-1. Make sure you have Node.js 18+ installed.
-2. Install dependencies:
+Built with Next.js 14, Supabase, and the Solana wallet ecosystem.
 
-```bash
+## What works today
+
+- Meme upload, browsing, and voting
+- Comments with Supabase persistence
+- Solana wallet connection (Phantom)
+- Solana Pay QR tipping: scan to send SOL directly to the creator's wallet
+- Creator leaderboard and trending tokens page
+- Daily featured meme
+
+## In development
+
+- Creator token launch via Bags SDK (UI in place, on-chain transaction next)
+- NFT minting via Metaplex (UI in place, on-chain transaction next)
+- Platform engagement token with 30-day vesting
+
+## Tech stack
+
+Next.js 14 (App Router), TypeScript, Tailwind CSS, Supabase (Postgres + Storage), @solana/web3.js, Solana Wallet Adapter, Solana Pay, Bags SDK, Metaplex, Zustand
+
+## Setup
+
+Requires Node.js 22 LTS.
+
 npm install
-```
 
-3. Set up environment variables:
-
-```bash
 cp .env.example .env.local
-```
 
-Then fill in your values in `.env.local`:
+Fill in .env.local:
+- NEXT_PUBLIC_SUPABASE_URL:        Your Supabase project URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY:   Your Supabase anon/public key
+- SUPABASE_SERVICE_ROLE_KEY:       Your Supabase service role key
 
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL (e.g. `https://xxxx.supabase.co`) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key
+Find both keys in your Supabase dashboard under Project Settings > API.
+Also create a public Storage bucket named meme-images in your Supabase project.
 
-You can find both in your Supabase dashboard under **Project Settings → API**.
-
-> Also create a public Storage bucket named `meme-images` in your Supabase project for image uploads.
-
-## Run the App
-
-Start the development server:
-
-```bash
 npm run dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open http://localhost:3000
 
-For a production run:
+## CI
 
-```bash
-npm run build
-npm run start
-```
-
-## Development Pipeline
-
-This app is developed using a dual-AI pipeline:
-- Claude Code for architecture generation
-- Cursor AI for iterative refinement
-
-
-![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+GitHub Actions workflow runs unit tests on push. See .github/workflows/ci.yml.
