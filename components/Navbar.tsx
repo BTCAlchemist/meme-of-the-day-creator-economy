@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Flame, Trophy, TrendingUp, LayoutGrid, Plus } from "lucide-react";
 import { WalletButton } from "./WalletButton";
-import { PoweredByBagsBadge } from "./BagsToast";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useState } from "react";
@@ -65,7 +64,6 @@ export function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <PoweredByBagsBadge />
             <button
               onClick={handlePostClick}
               className="hidden sm:flex items-center gap-1.5 bg-accent hover:bg-accent-light text-white px-3 py-2 rounded-xl font-semibold text-sm transition-all hover:scale-105 active:scale-95"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Send } from "lucide-react";
 import { DbComment } from "@/lib/types";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -75,14 +74,17 @@ export function CommentSection({ memeId, initialComments }: Props) {
           {comments.map((c) => {
             const short = `${c.user_wallet.slice(0, 4)}…${c.user_wallet.slice(-4)}`;
             const avatar = `https://api.dicebear.com/8.x/bottts/svg?seed=${c.user_wallet}`;
+            const fallback = `https://api.dicebear.com/8.x/identicon/png?seed=${encodeURIComponent(c.user_wallet)}&size=32&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
             return (
               <div key={c.id} className="flex gap-3">
-                <Image
+                <img
                   src={avatar}
                   alt={short}
                   width={32}
                   height={32}
-                  className="rounded-full bg-gray-800 flex-shrink-0"
+                  loading="lazy"
+                  className="rounded-full bg-gray-800 flex-shrink-0 object-cover"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
                 />
                 <div className="bg-surface border border-border/50 rounded-xl px-4 py-3 flex-1">
                   <div className="flex items-center gap-2 mb-1">

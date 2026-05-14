@@ -46,7 +46,6 @@ export async function mintMemeNft(
   // Mint NFT on devnet — Phantom will prompt the user to sign
   const umi = createUmi(DEVNET_RPC)
     .use(mplTokenMetadata())
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .use(walletAdapterIdentity(wallet as any));
 
   const mint = generateSigner(umi);

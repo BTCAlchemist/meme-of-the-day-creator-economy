@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUp, MessageCircle, ShoppingCart, Zap, Flame } from "lucide-react";
+import { ArrowUp, MessageCircle, ShoppingCart, Zap, Gift } from "lucide-react";
 import { DbMeme } from "@/lib/types";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useAppStore } from "@/lib/store";
 import { formatDistanceToNow } from "date-fns";
 import { CreatorAvatar } from "./CreatorAvatar";
+import { TipModal } from "./TipModal";
 
 interface Props {
   meme: DbMeme;
@@ -26,6 +27,7 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const { setVisible } = useWalletModal();
   const { votedMemes, hydrateVotedMemes, voteOnMeme, addToast } = useAppStore();
   const [votes, setVotes] = useState(meme.total_votes);
+  const [tipOpen, setTipOpen] = useState(false);
 
   const wallet = publicKey?.toBase58() ?? null;
 
@@ -53,25 +55,19 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
   const username = shortWallet(meme.creator_wallet);
 
   return (
+    <>
     <div
       className={`group bg-surface border border-border rounded-2xl overflow-hidden transition-all hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 ${
         featured ? "ring-2 ring-bags ring-offset-2 ring-offset-bg" : ""
       }`}
     >
-      {featured && (
-        <div className="flex items-center gap-1.5 bg-bags px-4 py-1.5 text-white text-xs font-bold">
-          <Flame size={12} />
-          MEME OF THE DAY
-        </div>
-      )}
-
       <Link href={`/meme/${meme.id}`} className="block relative">
         <div className={`relative w-full overflow-hidden bg-gray-900 ${featured ? "h-72" : "h-48"}`}>
           <Image
             src={meme.image_url}
             alt={meme.caption}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-contain transition-transform duration-500 group-hover:scale-105"
           />
           {meme.is_nft && meme.price && (
             <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm border border-accent/50 text-accent-light text-xs font-bold px-2 py-0.5 rounded-lg">
@@ -138,6 +134,14 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
           )}
 
           <button
+            onClick={() => setTipOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
+          >
+            <Gift size={14} />
+            Tip
+          </button>
+
+          <button
             onClick={() => addToast("Creator token investing coming soon via Bags!", "bags")}
             className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-bags bg-bags/10 hover:bg-bags/20 border border-bags/30 hover:border-bags/60 transition-all hover:scale-105"
           >
@@ -147,5 +151,14 @@ export function MemeCard({ meme, featured = false, commentCount = 0 }: Props) {
         </div>
       </div>
     </div>
+
+    {tipOpen && (
+      <TipModal
+        creatorWallet={meme.creator_wallet}
+        memeCaption={meme.caption}
+        onClose={() => setTipOpen(false)}
+      />
+    )}
+    </>
   );
 }
