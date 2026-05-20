@@ -32,11 +32,11 @@ export async function mintMemeNft(
   const supabase = getSupabase();
   const metaPath = `metadata/${walletAddress}/${Date.now()}.json`;
   const metaBlob = new Blob([JSON.stringify(metadata)], {
-    type: "application/json",
+    type: "text/plain",
   });
   const { error: uploadError } = await supabase.storage
     .from("meme-images")
-    .upload(metaPath, metaBlob, { contentType: "application/json" });
+    .upload(metaPath, metaBlob, { contentType: "text/plain" });
   if (uploadError) throw new Error(`Metadata upload failed: ${uploadError.message}`);
   const { data: urlData } = supabase.storage
     .from("meme-images")
