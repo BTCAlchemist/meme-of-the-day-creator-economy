@@ -42,6 +42,9 @@ export async function mintMemeNft(
     .from("meme-images")
     .getPublicUrl(metaPath);
   const metadataUri = urlData.publicUrl;
+  if (!metadataUri?.startsWith("https://")) {
+    throw new Error(`Failed to get public metadata URL: ${metadataUri ?? "empty"}`);
+  }
 
   // Mint NFT on devnet — Phantom will prompt the user to sign
   const umi = createUmi(DEVNET_RPC)

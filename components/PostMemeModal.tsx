@@ -22,12 +22,13 @@ export function PostMemeModal({ onClose }: Props) {
 
   const [caption, setCaption] = useState("");
   const [isNFT, setIsNFT] = useState(false);
-  const [nftPrice, setNftPrice] = useState("0.5");
+  const [nftPrice, setNftPrice] = useState("0.01");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "uploading" | "minting" | "creating">("form");
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasCreatorToken = !!myBagsProjectId;
@@ -39,21 +40,29 @@ export function PostMemeModal({ onClose }: Props) {
     return () => URL.revokeObjectURL(objectUrl);
   }, [selectedImage]);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
+  const handleFile = (file: File | null) => {
     if (!file) return;
     const validTypes = ["image/png", "image/jpeg", "image/gif"];
     if (!validTypes.includes(file.type)) {
       addToast("Please upload a PNG, JPG, or GIF image.", "error");
-      event.target.value = "";
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
       addToast("Image is too large. Maximum size is 10MB.", "error");
-      event.target.value = "";
       return;
     }
     setSelectedImage(file);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFile(event.target.files?.[0] ?? null);
+    event.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFile(e.dataTransfer.files?.[0] ?? null);
   };
 
   const uploadImage = async (file: File, wallet: string): Promise<string> => {
@@ -172,7 +181,10 @@ export function PostMemeModal({ onClose }: Props) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full border-2 border-dashed border-border hover:border-accent/50 rounded-xl p-5 text-center cursor-pointer transition-colors group"
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`w-full border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors group ${isDragging ? "border-accent bg-accent/10" : "border-border hover:border-accent/50"}`}
           >
             {imagePreviewUrl ? (
               <div className="space-y-3">
@@ -217,7 +229,7 @@ export function PostMemeModal({ onClose }: Props) {
               className={`w-11 h-6 rounded-full transition-colors relative ${isNFT ? "bg-accent" : "bg-gray-700"}`}
             >
               <span
-                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isNFT ? "translate-x-5" : "translate-x-0.5"}`}
+                className={`absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow transition-transform ${isNFT ? "translate-x-5" : "translate-x-0.5"}`}
               />
             </button>
           </div>
