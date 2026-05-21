@@ -8,43 +8,56 @@ import {
 } from "@metaplex-foundation/mpl-token-metadata";
 import { generateSigner, percentAmount } from "@metaplex-foundation/umi";
 import type { WalletContextState } from "@solana/wallet-adapter-react";
-import { getSupabase } from "./supabase";
 
 const DEVNET_RPC = "https://api.devnet.solana.com";
+const MAX_ON_CHAIN_URI_LEN = 200;
 
-export async function mintMemeNft(
-  wallet: WalletContextState,
-  walletAddress: string,
+async function registerMetadataUri(
   imageUrl: string,
   caption: string
 ): Promise<string> {
-  // Upload NFT metadata JSON to Supabase Storage alongside images
-  const metadata = {
-    name: caption.slice(0, 32),
-    description: "Meme NFT — MemeDay on Solana",
-    image: imageUrl,
-    properties: {
-      files: [{ uri: imageUrl, type: "image/jpeg" }],
-      category: "image",
-    },
-  };
+  const base =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL ?? "";
 
-  const supabase = getSupabase();
-  const metaPath = `metadata/${walletAddress}/${Date.now()}.json`;
-  const metaBlob = new Blob([JSON.stringify(metadata)], {
-    type: "text/plain",
+  const res = await fetch(`${base}/api/nft-metadata`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: caption.slice(0, 32),
+      image: imageUrl,
+      description: "Meme NFT — MemeDay on Solana",
+    }),
   });
-  const { error: uploadError } = await supabase.storage
-    .from("meme-images")
-    .upload(metaPath, metaBlob, { contentType: "text/plain" });
-  if (uploadError) throw new Error(`Metadata upload failed: ${uploadError.message}`);
-  const { data: urlData } = supabase.storage
-    .from("meme-images")
-    .getPublicUrl(metaPath);
-  const metadataUri = urlData.publicUrl;
-  if (!metadataUri?.startsWith("https://")) {
-    throw new Error(`Failed to get public metadata URL: ${metadataUri ?? "empty"}`);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      (err as { error?: string }).error ??
+        `Metadata registration failed (${res.status})`
+    );
   }
+
+  const { uri } = (await res.json()) as { uri: string };
+  if (!uri?.startsWith("http")) {
+    throw new Error(`Invalid metadata URI: ${uri ?? "empty"}`);
+  }
+  if (uri.length > MAX_ON_CHAIN_URI_LEN) {
+    throw new Error(
+      `Metadata URI too long (${uri.length} chars, max ${MAX_ON_CHAIN_URI_LEN})`
+    );
+  }
+  return uri;
+}
+
+export async function mintMemeNft(
+  wallet: WalletContextState,
+  _walletAddress: string,
+  imageUrl: string,
+  caption: string
+): Promise<string> {
+  const metadataUri = await registerMetadataUri(imageUrl, caption);
 
   // Mint NFT on devnet — Phantom will prompt the user to sign
   const umi = createUmi(DEVNET_RPC)

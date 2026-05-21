@@ -37,9 +37,12 @@ Fill in .env.local:
 - NEXT_PUBLIC_SUPABASE_URL:        Your Supabase project URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY:   Your Supabase anon/public key
 - SUPABASE_SERVICE_ROLE_KEY:       Your Supabase service role key
+- TEST_SOLANA_PRIVATE_KEY:         Your Solana dev net key for automation test
 
-Find both keys in your Supabase dashboard under Project Settings > API.
-Also create a public Storage bucket named meme-images in your Supabase project.
+Find Supabase keys in your Supabase dashboard under Project Settings > API.
+Create a public Storage bucket named meme-images in your Supabase project. Database definitions are in Supabase folder (run migrations in `supabase/migrations/`, including `nft_metadata` for NFT minting).
+
+
 
 npm run dev
 

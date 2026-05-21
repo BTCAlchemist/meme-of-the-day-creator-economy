@@ -1,5 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { getSupabase } from "./supabase";
+import { getSupabase, getSupabaseAdmin } from "./supabase";
 import { DbComment, DbMeme, DbUser } from "./types";
 
 export async function getMemes(): Promise<DbMeme[]> {
@@ -164,4 +164,38 @@ export async function getCreatorsWithMemeCounts(): Promise<
     memeCount: memeCounts.get(u.wallet_address) ?? 0,
     joinedAt: firstMemeAt.get(u.wallet_address) ?? new Date().toISOString(),
   }));
+}
+
+export interface NftMetadataRow {
+  id: string;
+  name: string;
+  image_url: string;
+  description: string;
+}
+
+export async function createNftMetadata(row: {
+  name: string;
+  image_url: string;
+  description: string;
+}): Promise<{ id: string }> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("nft_metadata")
+    .insert(row)
+    .select("id")
+    .single();
+  if (error) throw error;
+  return { id: data.id };
+}
+
+export async function getNftMetadata(id: string): Promise<NftMetadataRow | null> {
+  noStore();
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("nft_metadata")
+    .select("id, name, image_url, description")
+    .eq("id", id)
+    .single();
+  if (error) return null;
+  return data;
 }
